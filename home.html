@@ -46,13 +46,15 @@
       <div class="pure-u-1-5" >
         <input type='text' id="color-picker" />
       </div>
-      <div class="pure-u-4-5">
+      <div class="pure-u-2-5">
         Brush Size
         <select id="width-selector">
           <option value="4">4px</option>
           <option value="8" selected>8px</option>
           <option value="12">12px</option>
         </select>
+      </div>
+      <div class="pure-u-2-5" id="population">
       </div>
       <div class="pure-u-1">
         <canvas width="800" height="450" id="theCanvas"></canvas>
@@ -117,8 +119,6 @@
     }
   });
 
-  var socket = io.connect('/');
-
   var paint = function(mouse) {
 
     if (mouse.color === 'kill') {
@@ -147,6 +147,20 @@
 
     userIDMap[mouse.userID] = mouse;
   };
+
+  var socket = io.connect('/');
+
+  var population = document.getElementById('population');
+  socket.on('population', function (data) {
+    data = data - 1;
+
+    if (data === 0)
+      population.innerText = 'no one else is online';
+    else if (data === 1)
+      population.innerText = '1 other hoodlum online';
+    else
+      population.innerText = [data, ' other hoodlums online'].join('');
+  });
 
   socket.on('paint', function (data) {
     paint(JSON.parse(data));

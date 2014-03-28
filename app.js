@@ -50,7 +50,16 @@ redis_sub.on('message', function(channel, message) {
 
 
 io.sockets.on('connection', function (socket) {
+  io.sockets.emit('population', io.sockets.clients().length);
+
   socket.on('paint', function (data) {
     redis_pub.publish(redis_channel, data);
   });
+
+  socket.on('disconnect', function () {
+    io.sockets.emit('population', io.sockets.clients().length - 1);
+  });
+
 });
+
+
