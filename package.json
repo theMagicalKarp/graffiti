@@ -1,0 +1,11 @@
+{
+  "name": "graffiti",
+  "description": "A web app that paints a picture.",
+  "author": "Robert Sheehy <rsheehy@iastate.edu>",
+  "dependencies": {
+    "redis": "0.10.x",
+    "express": "3.5.x",
+    "socket.io": "0.9.x"
+  },
+  "engine": "node >= 0.4.1"
+}

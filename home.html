@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta content="utf-8" http-equiv="encoding">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.4.2/pure-min.css">
+  <link rel="stylesheet" href="http://purecss.io/combo/1.11.5?/css/main-grid.css&/css/main.css&/css/layouts.css&/css/rainbow/baby-blue.css">
+  <style>
+    canvas {
+      padding-left: 0;
+      padding-right: 0;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+      padding-bottom: 100px;
+    }
+
+    .content {
+      padding-left: 0px;
+      padding-right: 0px;
+    }
+    .pure-g *{
+      margin-top:15px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div id="main">
+  <div class="header">
+    <h1>graffiti</h1>
+    <h2 >
+      writings or drawings scribbled, scratched, or sprayed illicitly on a wall or other surface in a public place
+    </h2>
+  </div>
+
+  <div class="content">
+    <div class="pure-g">
+      <div class="pure-u-1-4" style="">
+        <input id="color-picker" value="66ff00">
+      </div>
+      <div class="pure-u-1-2"></div>
+      <div class="pure-u-1-4"></div>
+
+      <div class="pure-u-1">
+        <canvas width="800" height="450" id="theCanvas"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="http://jscolor.com/example/jscolor/jscolor.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function() {
+  var loadImage = function() {
+    var imageObj = new Image();
+    imageObj.onload = function() {
+      ctx.drawImage(this, 0, 0);
+    };
+
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function() { 
+        if (req.readyState === 4 && req.status === 200)
+        {
+          console.log(req.responseText);
+          imageObj.src = req.responseText
+        }
+    };
+    req.open('GET', '/image', true);
+    req.send(null);
+  };
+  loadImage();
+
+  var postReq = null;
+  var saveImage = function() {
+    if (postReq !== null)
+      return;
+
+    postReq = new XMLHttpRequest();
+    postReq.onreadystatechange = function() { 
+        if (postReq.readyState === 4 && postReq.status === 200)
+        {
+          postReq = null;
+        }
+    };
+
+
+    postReq.open('POST', '/image', true);
+    postReq.setRequestHeader('Content-Type', 'application/json');
+    postReq.send(JSON.stringify({'dataURL': canvas.toDataURL()}));
+  };
+
+
+  var s4 = function() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+               .toString(16)
+               .substring(1);
+  };
+
+  var guid = function() {
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+           s4() + '-' + s4() + s4() + s4();
+  }();
+
+  var guidMap = {};
+
+
+  var colorPickerNode = document.getElementById('color-picker');
+  var colorPicker = new jscolor.color(colorPickerNode, {});
+  var translateColor = function(rgb) {
+    var rgbString = rgb.map(function(colorChannel) {
+      return Number((colorChannel * 255).toFixed(0));
+    }).join(',');
+    return ['rgb(', rgbString, ')'].join('');
+  };
+  
+  var updateColor = function() {
+    currentColor = translateColor(colorPicker.rgb);
+    console.log(currentColor);
+  };
+  var currentColor = '';
+  updateColor();
+
+  colorPickerNode.addEventListener('change', updateColor, false);
+
+  var socket = io.connect('http://23.251.149.246');
+  // var socket = io.connect('http://localhost');
+
+  var paint = function(mouse) {
+    if (mouse.color === 'kill') {
+      delete guidMap[mouse.guid];
+      return;
+    }
+
+    var lastMouse = guidMap[mouse.guid];
+
+    if (lastMouse !== undefined) {
+      ctx.strokeStyle = mouse.color;
+      ctx.fillStyle = mouse.color;
+      ctx.beginPath();
+      ctx.lineTo(lastMouse.x, lastMouse.y);
+      ctx.lineTo(mouse.x, mouse.y);
+      ctx.stroke();
+      ctx.arc(mouse.x, mouse.y, 3,0,2*Math.PI);
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    guidMap[mouse.guid] = mouse;
+  };
+
+  socket.on('paint', function (data) {
+    paint(JSON.parse(data));
+
+  });
+
+  var lineDistance = function (point1, point2) {
+      var xs = 0;
+      var ys = 0;
+      xs = point2.x - point1.x;
+      xs = xs * xs;
+      ys = point2.y - point1.y;
+      ys = ys * ys;
+      return Math.sqrt( xs + ys );
+  };
+
+  var oldPos = null;
+  var onMouseMove = function(e) {
+    if (e.which !== 1)
+      return
+
+    var mouse = {
+      x: e.layerX,
+      y: e.layerY,
+      color: currentColor,
+      guid: guid
+    };
+
+    if (oldPos === null)
+      oldPos = mouse;
+
+    if (lineDistance(mouse, oldPos) > 50) {
+      saveImage();
+      oldPos = mouse;
+    }
+
+    socket.emit('paint', JSON.stringify(mouse));
+
+  };
+
+  var onMouseUp = function(e) {
+    var mouse = {
+      x: e.layerX,
+      y: e.layerY,
+      color: 'kill',
+      guid: guid
+    };
+    socket.emit('paint', JSON.stringify(mouse));
+  };
+
+  var canvas = document.getElementById('theCanvas');
+  canvas.addEventListener('mousemove', onMouseMove, false);
+  document.addEventListener('mouseup', onMouseUp, false);
+
+  var ctx = canvas.getContext('2d');
+  ctx.lineWidth = 6;
+
+
+})();
+</script>
+</body>
+</html>
