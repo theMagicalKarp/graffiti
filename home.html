@@ -67,6 +67,8 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 (function() {
+  var socket = io.connect('/');
+
   var loadImage = function() {
     var imageObj = new Image();
     imageObj.onload = function() {
@@ -148,7 +150,7 @@
     userIDMap[mouse.userID] = mouse;
   };
 
-  var socket = io.connect('/');
+
 
   var population = document.getElementById('population');
   socket.on('population', function (data) {
