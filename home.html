@@ -126,7 +126,6 @@
 
     if (mouse.color === 'kill') {
       delete userIDMap[mouse.userID];
-      delete userIDMap['client'];
       return;
     }
 
@@ -196,6 +195,7 @@
   var isDown = false; // couldn't find a nice way to detect mouse click state.
   var onMouseUp = function(e) {
     isDown = false;
+    delete userIDMap['client'];
     var mouse = {
       x: e.layerX,
       y: e.layerY,
