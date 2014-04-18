@@ -170,13 +170,25 @@
 
   var getMouseData = function(e) {
     var rect = canvas.getBoundingClientRect();
-    return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-      width: currentWidth,
-      color: currentColor,
-      userID: userID
-    };
+    if (e.touches && e.touches.length >= 1) {
+      var touch = e.touches[0];
+      return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top,
+        width: currentWidth,
+        color: currentColor,
+        userID: userID
+      };
+    } else {
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+        width: currentWidth,
+        color: currentColor,
+        userID: userID
+      };
+    }
+
   };
 
   var onMouseMove = function(e) {
@@ -213,8 +225,13 @@
 
   var canvas = document.getElementById('theCanvas');
   canvas.addEventListener('mousemove', onMouseMove, false);
+  canvas.addEventListener('touchmove', onMouseMove, false);
+
   document.addEventListener('mouseup', onMouseUp, false);
+  document.addEventListener('touchend', onMouseUp, false);
+
   document.addEventListener('mousedown', onMouseDown, false);
+  document.addEventListener('touchstart', onMouseDown, false);
 
   var ctx = canvas.getContext('2d');
 
