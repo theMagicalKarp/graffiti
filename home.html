@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta content="utf-8" http-equiv="encoding">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=0.75, user-scalable=no">
   <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/pure/0.4.2/pure-min.css">
   <link rel="stylesheet" href="http://purecss.io/css/layouts/side-menu.css">
   <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/spectrum/1.3.0/css/spectrum.min.css">
@@ -202,6 +202,7 @@
     // let's paint locally so the user doesn't feel lag.
     mouse.userID = 'client';
     paint(mouse);
+    e.preventDefault(); 
   };
 
   var isDown = false; // couldn't find a nice way to detect mouse click state.
